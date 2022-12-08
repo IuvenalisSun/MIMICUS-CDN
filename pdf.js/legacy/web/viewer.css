@@ -1147,7 +1147,7 @@
   --dir-factor: -1;
 }
 
-@media (prefers-color-scheme) {
+@media (prefers-color-scheme: white) {
   :root {
     --main-color: rgba(249, 249, 250, 1);
     --body-bg-color: rgba(42, 42, 46, 1);
