@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link
+      href="https://fonts.googleapis.com/css?family=Montserrat:600"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css?family=Sriracha"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        margin: 0;
+      }
+
+      .menu__item {
+        display: flex;
+        align-items: center;
+
+        padding: 10px;
+        padding-right: 0;
+
+        width: 950px;
+        height: 45px;
+        border: 1px solid #999999;
+        margin: 3px;
+        padding: 7px 10px;
+        border-radius: 10px;
+      }
+
+      .menu__item__title {
+        width: 160px;
+        height: 40px;
+        padding: 0 20px;
+
+        display: flex;
+        justify-content: center;
+        align-items: center;
+
+        color: #ffffff;
+        letter-spacing: 0.15em;
+        font-family: "Montserrat";
+        font-weight: bold;
+        font-size: 13px;
+
+        background: linear-gradient(126deg, #82d5d6 24%, #f9d047 100%);
+      }
+
+      .menu__item__element {
+        display: flex;
+
+        padding: 10px;
+        padding-right: 0;
+      }
+
+      .menu__item__placeholder {
+        color: #999999;
+        display: flex;
+        margin: auto;
+
+        font-family: "Montserrat";
+
+        font-weight: 600;
+        font-size: 13px;
+
+        padding: 10px;
+        padding-right: 0;
+      }
+
+      .btn-main {
+        background: white;
+
+        padding: 8px 15px;
+        margin-right: -8px;
+        border-radius: 7px;
+
+        font-size: 10px;
+        font-weight: 600;
+        font-family: "Montserrat";
+
+        float: left;
+        box-shadow: 0px 2px 5px 0px rgba(0, 0, 0, 0.5);
+
+        cursor: pointer;
+      }
+
+      .btn-main:hover {
+        background-color: #eeeeee;
+      }
+
+      .btn-sub {
+        width: 15px;
+        height: 15px;
+
+        font-size: 14px;
+        font-family: "Montserrat";
+        text-align: center;
+
+        position: relative;
+
+        top: -7px;
+        overflow: hidden;
+        cursor: pointer;
+
+        box-shadow: 0px 2px 5px 0px rgba(0, 0, 0, 0.5);
+        border-radius: 50%;
+      }
+
+      .btn-add {
+        background: #82d5d6;
+      }
+
+      .btn-add:hover {
+        background-color: #12babd;
+      }
+
+      .btn-remove {
+        background: #f9d047;
+      }
+
+      .btn-remove:hover {
+        background-color: #ffb700;
+      }
+
+      #selectedItems {
+        /* letter-spacing: 0.15em; */
+        font-family: "Sriracha";
+        font-size: 14px;
+
+        width: 950px;
+        height: 50px;
+        padding: 10px;
+        border: none;
+
+        align-items: center;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+
+      .box-empty {
+        border: 1px dashed #999999;
+      }
+
+      .box-disabled {
+        background: #cccccc;
+      }
+    </style>
+    <script>
+      let allItems;
+      let unselectedItems = [];
+      let selectedItems = [];
+
+      window.onload = function () {
+        // dummy
+        allItems = {
+          "Expand Solid": [
+            "Bubble",
+            "Lever",
+            "Shape Memory Alloy",
+            "Tension",
+            "Thermal Expansion",
+          ], // ["Bubble"],
+          "Remove Solid": ["Erosion", "Holes", "Melting", "Vacuum"], //"Reduction",
+          "Break Down Solid": [
+            "Deformation",
+            "Mechanical Force",
+            "Explosion",
+            "Combustion",
+            "Oxidation",
+          ],
+        };
+
+        let value = 0;
+        for (let categoryName in allItems) {
+          for (let functionName of allItems[categoryName]) {
+            //selectedItems.push(
+            unselectedItems.push(
+              //
+              {
+                value: value++, //
+                category: categoryName,
+                label: functionName,
+              }
+            );
+          }
+        }
+
+        renderItems();
+      };
+
+      window.onmessage = (msg) => {
+        console.log("recMessage: ", msg);
+        // if ...
+        // allItems = ...
+      };
+
+      function sendMessage(msg) {
+        console.log("sendMessage: ", msg);
+        const parentUrl = "*";
+        window.parent.postMessage(msg, parentUrl);
+      }
+
+      function addItem(selectedValue) {
+        moveElementToOtherArray(unselectedItems, selectedItems, selectedValue);
+        renderItems();
+        sendMessage(selectedItems.map((element) => element.label));
+      }
+
+      function removeItem(selectedValue) {
+        moveElementToOtherArray(selectedItems, unselectedItems, selectedValue);
+        renderItems();
+        sendMessage(selectedItems.map((element) => element.label));
+      }
+
+      /**
+
+             * @param {Array} fromArray
+             * @param {Array} toArray
+             * @param {string} value
+
+             */
+      function moveElementToOtherArray(fromArray, toArray, value) {
+        toArray.push(fromArray.find((item) => item.value == value));
+        fromArray.splice(
+          fromArray.findIndex((item) => item.value === value),
+          1
+        );
+      }
+
+      function appendMenuItem(parentDiv, item, btnFunction, label) {
+        const newBtn = document.createElement("div");
+        newBtn.setAttribute("class", "menu__item__element");
+        newBtn.setAttribute("value", item.value);
+        newBtn.innerHTML = `
+                <div class="btn-main" onclick="sendMessage('${item.label}')">${item.label}</div>
+                <div class="btn-sub btn-${btnFunction}" onclick="${btnFunction}Item(${item.value})">${label}</div>
+              `;
+        parentDiv.appendChild(newBtn);
+      }
+
+      function renderItems() {
+        // 초기화 (전체 삭제)
+        const unselectedDiv = document.querySelector("#unselected");
+        const selectedItemsDiv = document.querySelector("#selectedItems");
+        const menuItemElementDivs = document.querySelectorAll(
+          ".menu__item__element"
+        );
+        Array.from(unselectedDiv.childNodes).forEach((div) => div.remove());
+        Array.from(selectedItemsDiv.childNodes).forEach((div) => div.remove());
+        Array.from(menuItemElementDivs).forEach((div) => div.remove());
+
+        // 빈 박스 생성
+        for (categoryName in allItems) {
+          const menuItemDiv = document.createElement("div");
+          menuItemDiv.setAttribute("id", camelize(categoryName));
+          menuItemDiv.setAttribute("class", "menu__item box-empty");
+
+          unselectedDiv.appendChild(menuItemDiv);
+
+          menuItemTitleDiv = document.createElement("div");
+          menuItemTitleDiv.setAttribute(
+            "class",
+            "menu__item__title box-disabled"
+          );
+          menuItemTitleDiv.textContent = categoryName;
+          menuItemDiv.appendChild(menuItemTitleDiv);
+
+          const placeholderBox = document.createElement("div");
+          placeholderBox.setAttribute("class", "menu__item__placeholder");
+          placeholderBox.textContent =
+            "You have chosen all ideas from " + categoryName + "! What more?";
+          menuItemDiv.appendChild(placeholderBox);
+        }
+
+        // 선택되지 않은 아이템 생성
+        unselectedItems.sort((a, b) => parseInt(a.value) - parseInt(b.value));
+        for (item of unselectedItems) {
+          const category = camelize(item.category);
+          const menuItemDiv = document.getElementById(category);
+          const menuItemTitleDiv = menuItemDiv.childNodes[0];
+          const menuItemPlaceholder = menuItemDiv.getElementsByClassName(
+            "menu__item__placeholder"
+          )[0];
+          if (menuItemPlaceholder) {
+            menuItemPlaceholder.remove();
+          }
+
+          menuItemDiv.setAttribute("class", "menu__item");
+          menuItemTitleDiv.setAttribute("class", "menu__item__title");
+          appendMenuItem(menuItemDiv, item, "add", "＋");
+        }
+
+        // 선택된 아이템 생성
+        const selectedItemCount = selectedItems.length;
+        if (selectedItemCount > 0) {
+          if (selectedItemCount === 1) {
+            selectedItemsDiv.textContent = `Great! You have picked`;
+          } else {
+            selectedItemsDiv.textContent = `Excellent! You have picked ${selectedItems.length} ideas`;
+          }
+          for (item of selectedItems) {
+            appendMenuItem(selectedItemsDiv, item, "remove", "－");
+          }
+        } else {
+          selectedItemsDiv.textContent = "Don't be shy! Pick any idea above~";
+        }
+      }
+
+      function camelize(str) {
+        return str.replace(/(?:^\w|[A-Z]|\b\w|\s+)/g, function (match, index) {
+          if (+match === 0) return "";
+          return index === 0 ? match.toLowerCase() : match.toUpperCase();
+        });
+      }
+    </script>
+  </head>
+
+  <body>
+    <div id="unselected" class="menu"></div>
+    <div id="selected" class="menu">
+      <div id="selectedItems" class="menu__item"></div>
+    </div>
+  </body>
+</html>
